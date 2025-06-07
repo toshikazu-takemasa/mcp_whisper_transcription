@@ -13,10 +13,12 @@ COPY requirements.txt pyproject.toml ./
 
 # Python依存関係をインストール
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir -e .
 
 # アプリケーションコードをコピー
 COPY src/ ./src/
+
+# パッケージをインストール
+RUN pip install --no-cache-dir -e .
 
 # ポートを公開
 EXPOSE 30007

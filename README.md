@@ -41,6 +41,37 @@ docker run -e OPENAI_API_KEY="your-openai-api-key" \
   ghcr.io/toshikazu-takemasa/mcp_whisper_transcription:latest
 ```
 
+### Docker Composeを使用する場合
+
+```bash
+# 環境変数ファイルを作成
+cp .env.example .env
+# .envファイルを編集してOpenAI API keyを設定
+
+# ローカルビルド版を起動
+docker-compose up
+
+# または、公開済みイメージを使用
+docker-compose --profile published up mcp-whisper-transcription-published
+```
+
+### Docker イメージのビルドについて
+
+このプロジェクトでは、GitHub Actionsを使用してDocker イメージを自動的にビルド・公開しています：
+
+- `main`ブランチへのプッシュ時に自動的にイメージがビルドされます
+- イメージは GitHub Container Registry (GHCR) に公開されます
+- タグ付きリリース（`v*`）時には、バージョン付きイメージも作成されます
+
+手動でイメージをテストする場合：
+
+```bash
+# テストスクリプトを実行
+./scripts/test-docker.sh local   # ローカルビルドをテスト
+./scripts/test-docker.sh remote  # 公開イメージをテスト
+./scripts/test-docker.sh both    # 両方をテスト
+```
+
 ### devcontainerを使用する場合
 
 1. このリポジトリをクローンします

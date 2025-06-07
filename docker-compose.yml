@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mcp-whisper-transcription:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mcp-whisper-transcription:local
+    container_name: mcp-whisper-transcription
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AUDIO_FILES_PATH=/app/audio_files
+    volumes:
+      - ./audio_files:/app/audio_files:rw
+      - ./output:/app/output:rw
+    ports:
+      - "30007:30007"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.path.insert(0, '/app/src'); from mcp_whisper_transcription.server import app; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Alternative service using the published image
+  mcp-whisper-transcription-published:
+    image: ghcr.io/toshikazu-takemasa/mcp-whisper-transcription:latest
+    container_name: mcp-whisper-transcription-published
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - AUDIO_FILES_PATH=/app/audio_files
+    volumes:
+      - ./audio_files:/app/audio_files:rw
+      - ./output:/app/output:rw
+    ports:
+      - "30008:30007"
+    restart: unless-stopped
+    profiles:
+      - published
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.path.insert(0, '/app/src'); from mcp_whisper_transcription.server import app; print('OK')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  audio_files:
+  output:
