@@ -20,7 +20,9 @@ from pydub import AudioSegment  # type: ignore
 
 # Type definitions for transcription
 SupportedChatWithAudioFormat = Literal["mp3", "wav"]
-AudioChatModel = Literal["gpt-4o-audio-preview-2024-10-01", "gpt-4o-audio-preview-2024-12-17", "gpt-4o-mini-audio-preview-2024-12-17"]
+AudioChatModel = Literal[
+    "gpt-4o-audio-preview-2024-10-01", "gpt-4o-audio-preview-2024-12-17", "gpt-4o-mini-audio-preview-2024-12-17"
+]
 EnhancementType = Literal["detailed", "storytelling", "professional", "analytical"]
 TTSVoice = Literal["alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer"]
 
@@ -162,9 +164,7 @@ class CreateClaudecastInputParams(BaseModel):
     output_file_path: Optional[Path] = Field(
         default=None, description="Output file path (defaults to speech.mp3 in current directory)"
     )
-    model: SpeechModel = Field(
-        default="tts-1", description="TTS model to use. tts-1 is always preferred."
-    )
+    model: SpeechModel = Field(default="tts-1", description="TTS model to use. tts-1 is always preferred.")
     voice: TTSVoice = Field(
         default="nova",
         description="Voice for the TTS (options: alloy, ash, coral, echo, fable, onyx, nova, sage, shimmer)",
@@ -221,7 +221,9 @@ async def get_audio_file_support(file_path: Path) -> FilePathSupportParams:
     )
 
     chat_support: Optional[List[str]] = (
-        ["gpt-4o-audio-preview-2024-10-01", "gpt-4o-audio-preview-2024-12-17", "gpt-4o-mini-audio-preview-2024-12-17"] if file_ext in [".mp3", ".wav"] else None
+        ["gpt-4o-audio-preview-2024-10-01", "gpt-4o-audio-preview-2024-12-17", "gpt-4o-mini-audio-preview-2024-12-17"]
+        if file_ext in [".mp3", ".wav"]
+        else None
     )
 
     # Get file metadata
@@ -257,16 +259,16 @@ app = FastMCP("Whisper Transcription")
 async def transcribe_audio(params: TranscribeAudioInputParams) -> str:
     """Transcribe audio file using OpenAI Whisper API."""
     client = AsyncOpenAI()
-    
+
     # Check if file exists
     if not params.input_file_path.exists():
         raise ValueError(f"Audio file not found: {params.input_file_path}")
-    
+
     # Check file format support
     file_support = await get_audio_file_support(params.input_file_path)
     if not file_support.transcription_support:
         raise ValueError(f"File format {file_support.format} is not supported for transcription")
-    
+
     try:
         with open(params.input_file_path, "rb") as audio_file:
             transcript = await client.audio.transcriptions.create(
@@ -276,12 +278,12 @@ async def transcribe_audio(params: TranscribeAudioInputParams) -> str:
                 prompt=params.prompt,
                 timestamp_granularities=params.timestamp_granularities,
             )
-        
+
         if params.response_format == "text":
             return transcript.text
         else:
             return transcript.model_dump_json(indent=2)
-            
+
     except Exception as e:
         raise ValueError(f"Transcription failed: {str(e)}")
 
@@ -297,62 +299,45 @@ async def transcribe_with_enhancement(params: TranscribeWithEnhancementInputPara
 async def chat_with_audio(params: ChatWithAudioInputParams) -> str:
     """Transcribe and analyze audio using OpenAI's audio-capable models."""
     client = AsyncOpenAI()
-    
+
     # Check if file exists
     if not params.input_file_path.exists():
         raise ValueError(f"Audio file not found: {params.input_file_path}")
-    
+
     # Check file format support
     file_support = await get_audio_file_support(params.input_file_path)
     if not file_support.chat_support:
         raise ValueError(f"File format {file_support.format} is not supported for audio chat")
-    
+
     try:
         # Read and encode audio file
         with open(params.input_file_path, "rb") as audio_file:
             audio_data = audio_file.read()
-            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
-        
+            audio_base64 = base64.b64encode(audio_data).decode("utf-8")
+
         # Prepare messages
         messages: List[ChatCompletionMessageParam] = []
-        
+
         if params.system_prompt:
-            messages.append({
-                "role": "system",
-                "content": params.system_prompt
-            })
-        
+            messages.append({"role": "system", "content": params.system_prompt})
+
         # User message with audio
         user_content: List[ChatCompletionContentPartParam] = [
-            {
-                "type": "input_audio",
-                "input_audio": {
-                    "data": audio_base64,
-                    "format": file_support.format
-                }
-            }
+            {"type": "input_audio", "input_audio": {"data": audio_base64, "format": file_support.format}}
         ]
-        
+
         if params.user_prompt:
-            user_content.append({
-                "type": "text",
-                "text": params.user_prompt
-            })
-        
-        messages.append({
-            "role": "user",
-            "content": user_content
-        })
-        
+            user_content.append({"type": "text", "text": params.user_prompt})
+
+        messages.append({"role": "user", "content": user_content})
+
         # Make API call
         response = await client.chat.completions.create(
-            model=params.model,
-            messages=messages,
-            modalities=["text", "audio"]
+            model=params.model, messages=messages, modalities=["text", "audio"]
         )
-        
+
         return response.choices[0].message.content or "No response generated"
-        
+
     except Exception as e:
         raise ValueError(f"Audio chat failed: {str(e)}")
 
@@ -362,22 +347,22 @@ async def convert_audio(params: ConvertAudioInputParams) -> str:
     """Convert audio file to specified format."""
     if not params.input_file_path.exists():
         raise ValueError(f"Audio file not found: {params.input_file_path}")
-    
+
     try:
         # Load audio file
         audio = AudioSegment.from_file(str(params.input_file_path))
-        
+
         # Determine output path
         if params.output_file_path:
             output_path = params.output_file_path
         else:
             output_path = params.input_file_path.with_suffix(f".{params.target_format}")
-        
+
         # Export in target format
         audio.export(str(output_path), format=params.target_format)
-        
+
         return f"Audio converted successfully to {output_path}"
-        
+
     except Exception as e:
         raise ValueError(f"Audio conversion failed: {str(e)}")
 
@@ -387,17 +372,17 @@ async def compress_audio(params: CompressAudioInputParams) -> str:
     """Compress audio file to reduce file size."""
     if not params.input_file_path.exists():
         raise ValueError(f"Audio file not found: {params.input_file_path}")
-    
+
     try:
         # Check current file size
         current_size_mb = params.input_file_path.stat().st_size / (1024 * 1024)
-        
+
         if current_size_mb <= params.max_mb:
             return f"File is already under {params.max_mb}MB ({current_size_mb:.2f}MB). No compression needed."
-        
+
         # Load audio file
         audio = AudioSegment.from_file(str(params.input_file_path))
-        
+
         # Determine output path
         if params.output_file_path:
             output_path = params.output_file_path
@@ -405,22 +390,22 @@ async def compress_audio(params: CompressAudioInputParams) -> str:
             output_path = params.input_file_path.with_name(
                 f"{params.input_file_path.stem}_compressed{params.input_file_path.suffix}"
             )
-        
+
         # Calculate compression ratio needed
         target_size_bytes = params.max_mb * 1024 * 1024
         current_size_bytes = params.input_file_path.stat().st_size
         compression_ratio = target_size_bytes / current_size_bytes
-        
+
         # Reduce bitrate to achieve target size
         bitrate = f"{int(128 * compression_ratio)}k"
-        
+
         # Export compressed audio
         audio.export(str(output_path), format="mp3", bitrate=bitrate)
-        
+
         new_size_mb = output_path.stat().st_size / (1024 * 1024)
-        
+
         return f"Audio compressed from {current_size_mb:.2f}MB to {new_size_mb:.2f}MB. Saved to {output_path}"
-        
+
     except Exception as e:
         raise ValueError(f"Audio compression failed: {str(e)}")
 
@@ -430,9 +415,9 @@ async def get_file_support(params: FilePathSupportParams) -> str:
     """Check if a file supports transcription and get file metadata."""
     if not params.file_path.exists():
         raise ValueError(f"File not found: {params.file_path}")
-    
+
     file_support = await get_audio_file_support(params.file_path)
-    
+
     result = {
         "file_path": str(file_support.file_path),
         "format": file_support.format,
@@ -440,9 +425,9 @@ async def get_file_support(params: FilePathSupportParams) -> str:
         "duration_seconds": file_support.duration_seconds,
         "transcription_support": file_support.transcription_support,
         "chat_support": file_support.chat_support,
-        "modified_time": time.ctime(file_support.modified_time)
+        "modified_time": time.ctime(file_support.modified_time),
     }
-    
+
     return f"File information:\n{result}"
 
 
@@ -450,27 +435,24 @@ async def get_file_support(params: FilePathSupportParams) -> str:
 async def create_speech(params: CreateClaudecastInputParams) -> str:
     """Convert text to speech using OpenAI's TTS API."""
     client = AsyncOpenAI()
-    
+
     try:
         # Determine output path
         if params.output_file_path:
             output_path = params.output_file_path
         else:
             output_path = Path("speech.mp3")
-        
+
         # Make TTS API call
         response = await client.audio.speech.create(
-            model=params.model,
-            voice=params.voice,
-            input=params.text_prompt,
-            speed=params.speed
+            model=params.model, voice=params.voice, input=params.text_prompt, speed=params.speed
         )
-        
+
         # Save audio file
         with open(output_path, "wb") as f:
             f.write(response.content)
-        
+
         return f"Speech generated successfully and saved to {output_path}"
-        
+
     except Exception as e:
         raise ValueError(f"Speech generation failed: {str(e)}")
