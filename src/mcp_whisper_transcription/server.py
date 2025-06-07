@@ -10,7 +10,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Literal
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server import FastMCP
 from openai import AsyncOpenAI
 from openai.types import AudioModel, AudioResponseFormat
 from openai.types.audio.speech_model import SpeechModel
@@ -474,13 +474,3 @@ async def create_speech(params: CreateClaudecastInputParams) -> str:
         
     except Exception as e:
         raise ValueError(f"Speech generation failed: {str(e)}")
-
-
-if __name__ == "__main__":
-    import asyncio
-    
-    async def main():
-        # FastMCPは自動的にstdio transportを使用します
-        await app.run()
-    
-    asyncio.run(main())
