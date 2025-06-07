@@ -477,5 +477,10 @@ async def create_speech(params: CreateClaudecastInputParams) -> str:
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=30007)
+    import asyncio
+    
+    async def main():
+        # FastMCPは自動的にstdio transportを使用します
+        await app.run()
+    
+    asyncio.run(main())

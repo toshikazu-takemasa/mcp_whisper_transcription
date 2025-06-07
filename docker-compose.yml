@@ -13,8 +13,6 @@ services:
     volumes:
       - ./audio_files:/app/audio_files:rw
       - ./output:/app/output:rw
-    ports:
-      - "30007:30007"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "python", "-c", "import sys; sys.path.insert(0, '/app/src'); from mcp_whisper_transcription.server import app; print('OK')"]
@@ -33,8 +31,6 @@ services:
     volumes:
       - ./audio_files:/app/audio_files:rw
       - ./output:/app/output:rw
-    ports:
-      - "30008:30007"
     restart: unless-stopped
     profiles:
       - published

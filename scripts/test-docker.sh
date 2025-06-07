@@ -43,18 +43,24 @@ test_image() {
     fi
     
     # Run container in test mode
-    echo "🚀 Starting container..."
+    echo "🚀 Testing container startup..."
     docker run --rm \
         -e OPENAI_API_KEY="${OPENAI_API_KEY:-test-key}" \
         "$image" \
         python -c "
 import sys
 sys.path.insert(0, '/app/src')
-from mcp_whisper_transcription.server import app
-print('✅ MCP Whisper Transcription server loaded successfully')
-print('📋 Available tools:')
-for tool_name in app.list_tools():
-    print(f'  - {tool_name}')
+try:
+    from mcp_whisper_transcription.server import app
+    print('✅ MCP Whisper Transcription server loaded successfully')
+    print('📋 Available tools:')
+    tools = app.list_tools()
+    for tool in tools:
+        print(f'  - {tool.name}: {tool.description}')
+    print(f'Total tools: {len(tools)}')
+except Exception as e:
+    print(f'❌ Error loading server: {e}')
+    sys.exit(1)
 "
 }
 

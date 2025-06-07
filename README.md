@@ -35,8 +35,9 @@ OpenAI Whisper APIを使用した音声文字起こし用のMCP（Model Context 
 # GitHub Container Registryから最新イメージを取得
 docker pull ghcr.io/toshikazu-takemasa/mcp_whisper_transcription:latest
 
-# MCPサーバーを起動
-docker run -e OPENAI_API_KEY="your-openai-api-key" \
+# MCPサーバーをstdioモードで起動（Clineなどのクライアントから使用）
+# 注意: このコマンドは直接実行するものではなく、MCPクライアント設定で使用します
+docker run -i -e OPENAI_API_KEY="your-openai-api-key" \
   -v $(pwd)/audio_files:/app/audio_files \
   ghcr.io/toshikazu-takemasa/mcp_whisper_transcription:latest
 ```
@@ -94,7 +95,27 @@ pip install -e .
 
 ## 使用方法
 
-### MCPサーバーとして起動
+### MCPクライアント（Cline等）での設定
+
+Clineなどのクライアントで使用する場合は、MCP設定ファイルに以下を追加してください：
+
+```json
+{
+  "mcpServers": {
+    "mcp-whisper-transcription": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "OPENAI_API_KEY=your-openai-api-key",
+        "-v", "/path/to/audio/files:/app/audio_files",
+        "ghcr.io/toshikazu-takemasa/mcp-whisper-transcription:latest"
+      ]
+    }
+  }
+}
+```
+
+### MCPサーバーとして直接起動
 
 ```bash
 python -m mcp_whisper_transcription

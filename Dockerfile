@@ -20,8 +20,5 @@ COPY src/ ./src/
 # パッケージをインストール
 RUN pip install --no-cache-dir -e .
 
-# ポートを公開
-EXPOSE 30007
-
-# MCPサーバーを起動
+# MCPサーバーを起動（stdioモードで）
 CMD ["python", "-m", "mcp_whisper_transcription"]
