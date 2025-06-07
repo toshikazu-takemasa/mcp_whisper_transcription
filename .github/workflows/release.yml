@@ -1,0 +1,49 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## Changes in this Release
+          
+          ### Docker Image
+          ```bash
+          docker pull ghcr.io/toshikazu-takemasa/mcp_whisper_transcription:${{ github.ref_name }}
+          ```
+          
+          ### Features
+          - OpenAI Whisper APIを使用した音声文字起こし
+          - 音声チャット機能
+          - 音声変換・圧縮機能
+          - テキスト音声変換（TTS）
+          
+          ### Installation
+          ```bash
+          # Docker使用
+          docker run -e OPENAI_API_KEY="your-api-key" \
+            ghcr.io/toshikazu-takemasa/mcp_whisper_transcription:${{ github.ref_name }}
+          
+          # ローカル環境
+          pip install git+https://github.com/toshikazu-takemasa/mcp_whisper_transcription.git@${{ github.ref_name }}
+          ```
+        draft: false
+        prerelease: false
