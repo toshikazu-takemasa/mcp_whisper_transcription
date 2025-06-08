@@ -119,6 +119,30 @@ def main():
 - All core MCP server functionality is now working correctly
 - The server is ready for Docker deployment and MCP client connections
 
+## Latest Fix Applied (2025-06-08)
+
+### 6. **AsyncIO Event Loop Conflict - Final Resolution**
+**Problem**: Despite previous documentation, the Docker container was still running an older version of `__main__.py` that contained the problematic async code, causing `RuntimeError: Already running asyncio in this thread`.
+
+**Solution Applied**:
+- Verified and updated `src/mcp_whisper_transcription/__main__.py` to the correct version
+- Removed any remaining `async_main()` function and `asyncio.run()` calls
+- Ensured `main()` function directly calls `app.run()` without async wrapper
+
+**Final Working Code**:
+```python
+"""Main entry point for MCP Whisper Transcription Server."""
+
+from .server import app
+
+def main():
+    """Entry point for the command line script."""
+    app.run()
+
+if __name__ == "__main__":
+    main()
+```
+
 ## Next Steps
 
 The server should now work correctly when:
