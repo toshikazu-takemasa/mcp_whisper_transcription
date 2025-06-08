@@ -1,6 +1,7 @@
 """Main entry point for MCP Whisper Transcription Server."""
 
 import asyncio
+
 from .server import app
 
 
