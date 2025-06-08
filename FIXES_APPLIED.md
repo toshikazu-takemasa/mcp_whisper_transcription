@@ -143,6 +143,19 @@ if __name__ == "__main__":
     main()
 ```
 
+### 7. **Docker Container Startup Issues**
+**Problem**: Docker container was failing to start due to incorrect module path in the CMD instruction.
+
+**Solution Applied**:
+- Updated Dockerfile CMD from `python -m mcp_whisper_transcription` to `mcp-whisper-transcription`
+- This uses the installed console script entry point defined in pyproject.toml
+- Updated healthcheck in docker-compose.yml to use correct import path
+
+**Fixed Dockerfile CMD**:
+```dockerfile
+CMD ["mcp-whisper-transcription"]
+```
+
 ## Next Steps
 
 The server should now work correctly when:

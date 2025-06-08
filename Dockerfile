@@ -21,4 +21,4 @@ COPY src/ ./src/
 RUN pip install --no-cache-dir -e .
 
 # MCPサーバーを起動（stdioモードで）
-CMD ["python", "-m", "mcp_whisper_transcription"]
+CMD ["mcp-whisper-transcription"]

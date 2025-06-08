@@ -15,7 +15,7 @@ services:
       - ./output:/app/output:rw
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import sys; sys.path.insert(0, '/app/src'); from mcp_whisper_transcription.server import app; print('OK')"]
+      test: ["CMD", "python", "-c", "from mcp_whisper_transcription.server import app; print('OK')"]
       interval: 30s
       timeout: 10s
       retries: 3
