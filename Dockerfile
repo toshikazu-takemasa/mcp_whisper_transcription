@@ -20,5 +20,12 @@ COPY src/ ./src/
 # パッケージをインストール
 RUN pip install --no-cache-dir -e .
 
+# 必要なディレクトリを作成
+RUN mkdir -p /app/audio_files /app/output
+
+# 環境変数のデフォルト値を設定
+ENV AUDIO_FILES_PATH=/app/audio_files
+ENV PYTHONUNBUFFERED=1
+
 # MCPサーバーを起動（stdioモードで）
 CMD ["mcp-whisper-transcription"]

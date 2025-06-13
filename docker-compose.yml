@@ -15,11 +15,11 @@ services:
       - ./output:/app/output:rw
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "from mcp_whisper_transcription.server import app; print('OK')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      test: ["CMD", "python", "-c", "import sys; sys.path.insert(0, '/app/src'); from mcp_whisper_transcription.server import app; print('OK')"]
+      interval: 60s
+      timeout: 15s
+      retries: 5
+      start_period: 60s
 
   # Alternative service using the published image
   mcp-whisper-transcription-published:

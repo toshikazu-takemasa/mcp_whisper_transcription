@@ -166,3 +166,64 @@ The server should now work correctly when:
 **For Docker deployment**: Run `docker-compose build --no-cache` to ensure the fixed code is used in the container.
 
 The timeout errors and asyncio conflicts mentioned in the original logs have been resolved.
+
+## Latest Fixes Applied (2025-06-13)
+
+### 8. **Restart Loop Resolution**
+**Problem**: The MCP server was experiencing continuous restart loops as shown in the logs, with timestamps indicating repeated server starts and failures.
+
+**Root Causes Identified**:
+1. Missing `.env` file causing environment variable failures
+2. Inadequate error handling in the main entry point
+3. Aggressive Docker healthcheck settings causing premature restarts
+4. Missing required directories in Docker container
+
+**Solutions Applied**:
+
+#### A. Environment Configuration
+- Created `.env` file with proper default values
+- Set `AUDIO_FILES_PATH=/app/audio_files` as default
+- Added placeholder for `OPENAI_API_KEY`
+
+#### B. Enhanced Main Entry Point (`__main__.py`)
+- Added comprehensive logging to track server startup
+- Improved error handling with specific exception catching
+- Removed problematic async wrapper that was causing event loop conflicts
+- Added graceful shutdown handling for KeyboardInterrupt
+
+#### C. Docker Configuration Improvements
+- **Dockerfile**:
+  - Added `PYTHONUNBUFFERED=1` to ensure immediate log output
+  - Created required directories (`/app/audio_files`, `/app/output`)
+  - Set default environment variables
+- **docker-compose.yml**:
+  - Extended healthcheck intervals (30s → 60s) to reduce restart pressure
+  - Increased healthcheck timeout (10s → 15s)
+  - Increased retry count (3 → 5) for more resilience
+  - Extended start period (40s → 60s) to allow proper initialization
+  - Fixed healthcheck Python path to include `/app/src`
+
+#### D. Debug Tools
+- Created `scripts/debug-server.sh` for comprehensive server diagnostics
+- Script checks environment variables, directories, imports, and startup
+- Includes timeout-based server startup testing
+
+**Expected Results**:
+- Server should start cleanly without restart loops
+- Better error logging for troubleshooting
+- More resilient Docker healthchecks
+- Proper environment variable handling
+
+**Verification Steps**:
+1. Ensure `.env` file has valid `OPENAI_API_KEY`
+2. Run `docker-compose build --no-cache` to rebuild with fixes
+3. Run `docker-compose up` to start the server
+4. Use `scripts/debug-server.sh` inside container for diagnostics
+5. Monitor logs for clean startup without restart loops
+
+**Files Modified**:
+- `.env` (created)
+- `src/mcp_whisper_transcription/__main__.py` (enhanced error handling)
+- `Dockerfile` (improved configuration)
+- `docker-compose.yml` (adjusted healthcheck settings)
+- `scripts/debug-server.sh` (created for debugging)
